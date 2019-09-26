@@ -1,17 +1,23 @@
 from django.shortcuts import render
-import datetime
-from django.http import HttpResponse, HttpResponseNotFound
-from django.views.decorators.http import require_http_methods
+# import loading from django template
+from django.http import HttpResponse
+# import class
+from myapp.form import StudentForm
+from myapp.functions.functions import handle_uploaded_file
 
 
 # Create your views here.
 def index(request):
-    now = datetime.datetime.now()
-    html = "<html><body><h3>Now time is %s.</h3></body></html>" % now
-    # rendering the template in HttpResponse
-    return HttpResponse(html)
+    return render(request, 'index.html')
 
 
-@require_http_methods(["GET"])
-def show(request):
-    return HttpResponse('<h1>This is Http GET request.</h1>')
+def add_student(request):
+    if request.method == 'POST':
+        student = StudentForm(request.POST, request.FILES)
+        if student.is_valid():
+            handle_uploaded_file(request.FILES['file'])
+            return HttpResponse("File uploaded successfully")
+    else:
+        student = StudentForm()
+        return render(request, 'add_student.html', {'form': student})
+
