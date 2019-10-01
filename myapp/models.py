@@ -1,25 +1,15 @@
 from __future__ import unicode_literals
 from django.db import models
+from django.urls import reverse
 
 
 # Create your models here.
-class Employee(models.Model):
-    id = models.CharField(max_length=20, primary_key=True)
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    contact = models.CharField(max_length=15)
+class Book(models.Model):
+    name = models.CharField(max_length=200)
+    pages = models.IntegerField()
 
-    class Meta:
-        db_table = "employee"
+    def __str__(self):
+        return self.name
 
-
-class Student(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=100)
-    contact = models.CharField(max_length=100)
-    email = models.EmailField(max_length=50)
-    age = models.CharField(max_length=3)
-    file = models.FileField
-
-    class Meta:
-        db_table = "student"
+    def get_absolute_url(self):
+        return reverse('book_edit', kwargs={'pk': self.pk})

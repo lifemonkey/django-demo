@@ -1,63 +1,53 @@
-from django.shortcuts import render, redirect
 # import loading from django template
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.forms import ModelForm
 # import class
-from myapp.functions.functions import handle_uploaded_file
-from myapp.form import StudentForm, EmployeeForm
-from myapp.models import Employee
+from myapp.models import Book
 
 
 # Create your views here.
-def index(request):
-    return render(request, 'index.html')
+class BookForm(ModelForm):
+    class Meta:
+        model = Book
+        fields = ['name', 'pages']
 
 
-def add_student(request):
-    if request.method == 'POST':
-        student = StudentForm(request.POST, request.FILES)
-        if student.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            return HttpResponse("File uploaded successfully")
-    else:
-        student = StudentForm()
-        return render(request, 'add_student.html', {'form': student})
+def home(request):
+    return render(request, "books/home.html")
 
 
-# Create your views here.
-def emp(request):
-    if request.method == "POST":
-        form = EmployeeForm(request.POST)
-        if form.is_valid():
-            try:
-                form.save()
-                return redirect('/show')
-            except:
-                pass
-    else:
-        form = EmployeeForm()
-    return render(request, 'index.html', {'form':form})
+def book_list(request, template_name='books/book_list.html'):
+    book = Book.objects.all()
+    data = {}
+    data['object_list'] = book
+    return render(request, template_name, data)
 
 
-def show(request):
-    employees = Employee.objects.all()
-    return render(request, "show.html", {'employees': employees})
+def book_view(request, pk, template_name='books/book_detail.html'):
+    book = get_object_or_404(Book, pk=pk)
+    return render(request, template_name, {'object': book})
 
 
-def edit(request, id):
-    employee = Employee.objects.get(id=id)
-    return render(request, 'edit.html', {'employee': employee})
-
-
-def update(request, id):
-    employee = Employee.objects.get(id=id)
-    form = EmployeeForm(request.POST, instance= employee)
+def book_create(request, template_name='books/book_form.html'):
+    form = BookForm(request.POST or None)
     if form.is_valid():
         form.save()
-        return redirect("/show")
-    return render(request, 'edit.html', {'employee': employee})
+        return redirect('book_list')
+    return render(request, template_name, {'form': form})
 
 
-def destroy(request, id):
-    employee = Employee.objects.get(id=id)
-    employee.delete()
-    return redirect("/show")
+def book_update(request, pk, template_name='books/book_form.html'):
+    book = get_object_or_404(Book, pk=pk)
+    form = BookForm(request.POST or None, instance=book)
+    if form.is_valid():
+        form.save()
+        return redirect('book_list')
+    return render(request, template_name, {'form': form})
+
+
+def book_delete(request, pk, template_name='books/book_confirm_delete.html'):
+    book= get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        book.delete()
+        return redirect('book_list')
+    return render(request, template_name, {'object': book})
